@@ -164,6 +164,7 @@ def drawGrid(w, rows, surface):
 
 def redrawWindow(surface):
     global rows,width,s,snack
+    pygame.display.set_caption("Hamiltonian Cycle Solver")
     surface.fill((0,0,0))
     drawGrid(width,rows,surface)
     snack.draw(surface)
