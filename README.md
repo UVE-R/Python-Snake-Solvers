@@ -16,4 +16,4 @@ Issues:
 - The Hamiltonian cycle causes the snake to have to traverse 1296 cubes on a 6x6 grid, and on a 20x20 grid it has to traverse 160,000 cubes
   -This is extremely inefficient, however it has a 100% success rate
 - The Snake AI only trains one snake at a time and the reward system is flawed
-  -  To do : Add support for more snakes and a better training system
+
