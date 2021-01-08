@@ -5,7 +5,6 @@ A Repository of Different Automated Snake Solving Scripts
 The repository contains:
 - The basic snake game
 - A Snake solver which uses A* pathfinding to get the shortest path to the apple
-  -  The Snake averages a score of 50+ on a 20x20 grid
 - A Snake solver which uses a hamiltonian cycle on a 6x6 grid
   -  This method always leads the snake to a win as the snake can never hit itself
 - A Snake solver which uses NEAT to train a single snake 
