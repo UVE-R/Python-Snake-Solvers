@@ -165,6 +165,7 @@ def drawGrid(w, rows, surface):
         
 def redrawWindow(surface,gen,snakes):
     global rows,width,snack
+    pygame.display.set_caption("NEAT Solver")
     surface.fill((0,0,0))
     drawGrid(width,rows,surface)
     snack.draw(surface)
