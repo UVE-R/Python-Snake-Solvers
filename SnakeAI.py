@@ -214,6 +214,7 @@ def main(genomes,config):
         ge.append(g)
     
     
+    """
     snakes.pop(-1)
     nets.pop(-1)
     ge.pop(-1)
@@ -222,7 +223,8 @@ def main(genomes,config):
     
     snakes.clear()
     snakes.append(Snake((255,0,0),(10,10)))
-    
+    """
+
     snack = cube(randomSnack(rows, snakes[0]),color=(0,255,0))
     
     flag = True
@@ -242,7 +244,7 @@ def main(genomes,config):
                 break
             
         pygame.event.get()
-        clock.tick(10)
+        clock.tick(60)
         
         for x,snake in enumerate(snakes):    
             output = nets[x].activate((snake.head.pos[0], snake.head.pos[1], abs(snake.head.pos[0] - snack.pos[0]), abs(snake.head.pos[1] - snack.pos[1])))
@@ -258,7 +260,12 @@ def main(genomes,config):
             elif output[3] > 0.7:
                 snakes[x].down()
             """
-
+            """
+            if x==0:
+                print("0: ",snake.body[0].pos)
+            else:
+                print("1: ",snake.body[0].pos)
+            """
             max_val = max(output)
             max_idx = output.index(max_val)
             #print(ge[x].fitness)
@@ -270,21 +277,24 @@ def main(genomes,config):
             
 
             if max_idx == 0:
-                snakes[x].left()
+                #print("LEFT: ",snake.body[0].pos)
+                snake.left()
             elif max_idx == 1:
-                snakes[x].right()
+                #print("RIGHT: ",snake.body[0].pos)
+                snake.right()
             elif max_idx == 2:
-                snakes[x].up()
+                #print("UP: ",snake.body[0].pos)
+                snake.up()
             else:
-                snakes[x].down()
+                #print("DOWN: ",snake.body[0].pos)
+                snake.down()
 
                     
             rem = []
             
-            for x,s in enumerate(snakes):
-                snakes[x].move()    
+            snake.move()    
             
-            if  snake.body[0].pos == snack.pos:
+            if  snake.body[0].pos == snack.pos: 
                 snake.addCube()
                 ge[x].fitness += 10
                 snack = cube(randomSnack(rows, snake),color=(0,255,0))
