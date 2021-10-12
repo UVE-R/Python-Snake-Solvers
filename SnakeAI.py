@@ -8,7 +8,7 @@ pygame.font.init()
 STAT_FONT = pygame.font.SysFont("comicsans",50)
 
 class cube(object):
-    rows = 20
+    rows = 15
     w = 500
     def __init__(self,start,dirnx=1,dirny=0,color=(255,0,0)):
         self.pos = start
@@ -194,7 +194,7 @@ def randomSnack(row, item):
 def main(genomes,config):
     global width,rows,snack,gen    
     width = 500
-    rows = 20
+    rows = 15
     win = pygame.display.set_mode((500,500))
     temp = 0
     
@@ -204,6 +204,7 @@ def main(genomes,config):
     ge = []
     snakes = []
 
+    #print(genomes)
     
     for x,g in genomes:
         net = neat.nn.FeedForwardNetwork.create(g, config)
@@ -212,17 +213,23 @@ def main(genomes,config):
         g.fitness = 0
         ge.append(g)
     
+    
     snakes.pop(-1)
     nets.pop(-1)
     ge.pop(-1)
     
+    #ge[1].fitness = -10000
     
     snakes.clear()
     snakes.append(Snake((255,0,0),(10,10)))
+    
     snack = cube(randomSnack(rows, snakes[0]),color=(0,255,0))
     
     flag = True
     clock = pygame.time.Clock()
+    
+    last_move = -1
+
     
     
     while flag:
@@ -238,17 +245,39 @@ def main(genomes,config):
         clock.tick(10)
         
         for x,snake in enumerate(snakes):    
-            ge[x].fitness += 0.1
             output = nets[x].activate((snake.head.pos[0], snake.head.pos[1], abs(snake.head.pos[0] - snack.pos[0]), abs(snake.head.pos[1] - snack.pos[1])))
 
+            #GET MAXIMUM
+            """
             if output[0] > 0.7:
                 snakes[x].left()                   
-            elif output[0] < -0.7:
+            elif output[1] > 0.7:
                 snakes[x].right()
-            elif output[0]>0:
-                snakes[x].down()
-            elif output[0] < 0:
+            elif output[2] > 0.7:
                 snakes[x].up()
+            elif output[3] > 0.7:
+                snakes[x].down()
+            """
+
+            max_val = max(output)
+            max_idx = output.index(max_val)
+            #print(ge[x].fitness)
+            
+            if last_move == max_idx:
+                ge[x].fitness -= 5
+
+            last_move = max_idx
+            
+
+            if max_idx == 0:
+                snakes[x].left()
+            elif max_idx == 1:
+                snakes[x].right()
+            elif max_idx == 2:
+                snakes[x].up()
+            else:
+                snakes[x].down()
+
                     
             rem = []
             
@@ -257,11 +286,11 @@ def main(genomes,config):
             
             if  snake.body[0].pos == snack.pos:
                 snake.addCube()
-                ge[x].fitness = 100
+                ge[x].fitness += 10
                 snack = cube(randomSnack(rows, snake),color=(0,255,0))
                 temp = 0
                 
-            if temp>100 or snake.head.pos[0] >rows -1 or snake.head.pos[0]<0 or snake.head.pos[1]<0 or snake.head.pos[1]>rows-1:
+            if temp>len(snake.body)*100 or snake.head.pos[0] >rows -1 or snake.head.pos[0]<0 or snake.head.pos[1]<0 or snake.head.pos[1]>rows-1:
                 rem.append(snake)         
                 
             if snake.collide():
