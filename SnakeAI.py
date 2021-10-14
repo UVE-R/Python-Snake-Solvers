@@ -8,7 +8,7 @@ pygame.font.init()
 STAT_FONT = pygame.font.SysFont("comicsans",50)
 
 class cube(object):
-    rows = 15
+    rows = 20
     w = 500
     def __init__(self,start,dirnx=1,dirny=0,color=(255,0,0)):
         self.pos = start
@@ -47,6 +47,9 @@ class Snake(object):
         self.turns = {}
         #Body made up of cube objects 
         self.body.append(self.head)
+        self.last_move = -11
+
+        self.snack = cube(randomSnack(rows, self),color=(0,255,0))
       
     def collide(self):
         #Check to see if position of each body object has the same position of another body object (i.e. It has collided)
@@ -168,8 +171,10 @@ def redrawWindow(surface,gen,snakes):
     pygame.display.set_caption("NEAT Solver")
     surface.fill((0,0,0))
     drawGrid(width,rows,surface)
-    snack.draw(surface)
-    snakes[0].draw(surface)        
+
+    snakes[0].snack.draw(surface)
+    snakes[0].draw(surface)  
+
     text = STAT_FONT.render("Gen: " + str(gen-1), 1, (255,255,255))
     surface.blit(text, (10, 10))
         
@@ -194,7 +199,7 @@ def randomSnack(row, item):
 def main(genomes,config):
     global width,rows,snack,gen    
     width = 500
-    rows = 15
+    rows = 20
     win = pygame.display.set_mode((500,500))
     temp = 0
     
@@ -213,26 +218,9 @@ def main(genomes,config):
         g.fitness = 0
         ge.append(g)
     
-    
-    """
-    snakes.pop(-1)
-    nets.pop(-1)
-    ge.pop(-1)
-    
-    #ge[1].fitness = -10000
-    
-    snakes.clear()
-    snakes.append(Snake((255,0,0),(10,10)))
-    """
-
-    snack = cube(randomSnack(rows, snakes[0]),color=(0,255,0))
-    
     flag = True
     clock = pygame.time.Clock()
-    
-    last_move = -1
-
-    
+     
     
     while flag:
         temp += 1
@@ -244,37 +232,27 @@ def main(genomes,config):
                 break
             
         pygame.event.get()
-        clock.tick(60)
+        clock.tick(10)
         
         for x,snake in enumerate(snakes):    
-            output = nets[x].activate((snake.head.pos[0], snake.head.pos[1], abs(snake.head.pos[0] - snack.pos[0]), abs(snake.head.pos[1] - snack.pos[1])))
+            output = nets[x].activate((snake.head.pos[0], snake.head.pos[1], abs(snake.head.pos[0] - snake.snack.pos[0]), abs(snake.head.pos[1] - snake.snack.pos[1])))
 
             #GET MAXIMUM
-            """
-            if output[0] > 0.7:
-                snakes[x].left()                   
-            elif output[1] > 0.7:
-                snakes[x].right()
-            elif output[2] > 0.7:
-                snakes[x].up()
-            elif output[3] > 0.7:
-                snakes[x].down()
-            """
-            """
-            if x==0:
-                print("0: ",snake.body[0].pos)
-            else:
-                print("1: ",snake.body[0].pos)
-            """
             max_val = max(output)
             max_idx = output.index(max_val)
             #print(ge[x].fitness)
             
-            if last_move == max_idx:
+            #Snake goes back on its move 
+            if snake.last_move == 0 and max_idx == 1: 
+                ge[x].fitness -= 5
+            if snake.last_move == 1 and max_idx == 0: 
+                ge[x].fitness -= 5
+            if snake.last_move == 2 and max_idx == 3: 
+                ge[x].fitness -= 5
+            if snake.last_move == 3 and max_idx == 2: 
                 ge[x].fitness -= 5
 
-            last_move = max_idx
-            
+            snake.last_move = max_idx            
 
             if max_idx == 0:
                 #print("LEFT: ",snake.body[0].pos)
@@ -294,10 +272,10 @@ def main(genomes,config):
             
             snake.move()    
             
-            if  snake.body[0].pos == snack.pos: 
+            if  snake.body[0].pos == snake.snack.pos: 
                 snake.addCube()
                 ge[x].fitness += 10
-                snack = cube(randomSnack(rows, snake),color=(0,255,0))
+                snake.snack = cube(randomSnack(rows, snake),color=(0,255,0))
                 temp = 0
                 
             if temp>len(snake.body)*100 or snake.head.pos[0] >rows -1 or snake.head.pos[0]<0 or snake.head.pos[1]<0 or snake.head.pos[1]>rows-1:
