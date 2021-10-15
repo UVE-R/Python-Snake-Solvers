@@ -98,10 +98,14 @@ class Snake(object):
                 pygame.quit()                  
         
         #Loop through snake's body positions
-        #Get index and cube object in self.body             
+        #Get index and cube object in self.body  
+
+        ###when doing .left() the head's position is added to turns, and so the conditions to move the snake to the other side are never executed
+        #print(self.turns)           
         for i,c in enumerate(self.body):
             #Get postion of cube object
             p = c.pos[:]
+            
             if p in self.turns: #If the cube is at the turn position
                 turn = self.turns[p] #Get the direction to turn
                 c.move(turn[0],turn[1]) #Turn the cube
@@ -109,14 +113,18 @@ class Snake(object):
                 #Remove the turn once all of the snakw has passsed the cube
                 if i == len(self.body)-1:
                     self.turns.pop(p)
-            else:
+
+            else:   
+
+                """            
                 #When the cube is not turning
                 #If the cube is at the edge then make it appear at the opposite edge
                 if c.dirnx == -1 and c.pos[0] <= 0: c.pos = (c.rows-1, c.pos[1]) #If off the screen to the left, move to the right-most row on the screen 
                 elif c.dirnx == 1 and c.pos[0] >= c.rows-1: c.pos = (0,c.pos[1])
                 elif c.dirny == 1 and c.pos[1] >= c.rows-1: c.pos = (c.pos[0], 0)
                 elif c.dirny == -1 and c.pos[1] <= 0: c.pos = (c.pos[0],c.rows-1)
-                else: c.move(c.dirnx,c.dirny) #Keeps moving the cube when not turning             
+                """
+                c.move(c.dirnx,c.dirny) #Keeps moving the cube when not turning             
                     
     def reset(self, pos):
         self.head = cube(pos)
@@ -172,8 +180,10 @@ def redrawWindow(surface,gen,snakes):
     surface.fill((0,0,0))
     drawGrid(width,rows,surface)
 
+
     snakes[0].snack.draw(surface)
     snakes[0].draw(surface)  
+    
 
     text = STAT_FONT.render("Gen: " + str(gen-1), 1, (255,255,255))
     surface.blit(text, (10, 10))
@@ -220,7 +230,12 @@ def main(genomes,config):
     
     flag = True
     clock = pygame.time.Clock()
-     
+
+
+    """
+    snakes.clear()
+    snakes.append(Snake((255,0,0),(10,10)))
+    """
     
     while flag:
         temp += 1
@@ -233,43 +248,64 @@ def main(genomes,config):
             
         pygame.event.get()
         clock.tick(10)
-        
+            
+        rem = []
+        #print(snakes)
         for x,snake in enumerate(snakes):    
+            
             output = nets[x].activate((snake.head.pos[0], snake.head.pos[1], abs(snake.head.pos[0] - snake.snack.pos[0]), abs(snake.head.pos[1] - snake.snack.pos[1])))
 
             #GET MAXIMUM
             max_val = max(output)
             max_idx = output.index(max_val)
             #print(ge[x].fitness)
-            
-            #Snake goes back on its move 
-            if snake.last_move == 0 and max_idx == 1: 
-                ge[x].fitness -= 5
-            if snake.last_move == 1 and max_idx == 0: 
-                ge[x].fitness -= 5
-            if snake.last_move == 2 and max_idx == 3: 
-                ge[x].fitness -= 5
-            if snake.last_move == 3 and max_idx == 2: 
-                ge[x].fitness -= 5
 
-            snake.last_move = max_idx            
+
+            #print(x," ", snake)
+
+            #Carry out random moves until the 15th generation
+            if (15 - gen) > random.randint(0,40):
+                max_idx = random.randint(0,3) 
+            else:            
+                #Snake goes back on its move 
+                if snake.last_move == 0 and max_idx == 1: 
+                    ge[x].fitness -= 5
+                if snake.last_move == 1 and max_idx == 0: 
+                    ge[x].fitness -= 5
+                if snake.last_move == 2 and max_idx == 3: 
+                    ge[x].fitness -= 5
+                if snake.last_move == 3 and max_idx == 2: 
+                    ge[x].fitness -= 5
+
+                snake.last_move = max_idx  
+
+            """
+            if x == 0:
+                max_idx = 2
+
+            print(snake.body[0].pos)
+
+            """
 
             if max_idx == 0:
+
                 #print("LEFT: ",snake.body[0].pos)
                 snake.left()
             elif max_idx == 1:
+
                 #print("RIGHT: ",snake.body[0].pos)
                 snake.right()
             elif max_idx == 2:
+
                 #print("UP: ",snake.body[0].pos)
                 snake.up()
             else:
+
                 #print("DOWN: ",snake.body[0].pos)
                 snake.down()
 
-                    
-            rem = []
             
+            #print(snake.head.pos)
             snake.move()    
             
             if  snake.body[0].pos == snake.snack.pos: 
@@ -278,24 +314,33 @@ def main(genomes,config):
                 snake.snack = cube(randomSnack(rows, snake),color=(0,255,0))
                 temp = 0
                 
+            
             if temp>len(snake.body)*100 or snake.head.pos[0] >rows -1 or snake.head.pos[0]<0 or snake.head.pos[1]<0 or snake.head.pos[1]>rows-1:
-                rem.append(snake)         
-                
-            if snake.collide():
+                rem.append(snake)             
+            
+            elif snake.collide():
                 rem.append(snake)
             
         redrawWindow(win, gen, snakes)
              
-        for snake in rem:            
+        ####ONCE FIRST SNAKE DIES, THE NEXT SNAKE WHICH IS STILL ALIVE IS NOT DISPLAYED        
+
+        #print(rem)
+    
+        for snake in rem:
+            print(x, "DEAD")            
             x = snakes.index(snake)
             ge[x].fitness -= 10
             nets.pop(x)
             ge.pop(x)
+            
             snakes.remove(snake)
         
         if len(snakes) == 0:
             flag = False
             break 
+
+        
 
 def run(config_path):
     config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
